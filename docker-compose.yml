@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shelfvision
+      POSTGRES_USER: shelfvision
+      POSTGRES_PASSWORD: shelfvision
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shelfvision -d shelfvision"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9091"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "${MINIO_API_PORT:-9090}:9090"
+      - "${MINIO_CONSOLE_PORT:-9091}:9091"
+    restart: unless-stopped
+
+  app:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://shelfvision:shelfvision@db:5432/shelfvision
+      UPLOAD_DIR: /data/storage
+      MINIO_ENDPOINT: minio:9090
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_SECURE: "false"
+      MINIO_PUBLIC_ENDPOINT: http://localhost:${MINIO_API_PORT:-9090}
+    volumes:
+      - storage_data:/data/storage
+    ports:
+      - "${APP_PORT:-8010}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  storage_data:
+  minio_data:

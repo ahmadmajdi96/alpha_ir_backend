@@ -1,0 +1,1308 @@
+{
+  "generated_at": "2026-02-18T07:01:39.732985+00:00",
+  "base_url": "http://127.0.0.1:8787",
+  "total_tests": 65,
+  "passed": 65,
+  "failed": 0,
+  "expectation_failures_count": 0,
+  "expectation_failures": [],
+  "results": [
+    {
+      "name": "Health",
+      "method": "GET",
+      "path": "/health",
+      "request_payload": null,
+      "status_code": 200,
+      "response": {
+        "status": "ok"
+      }
+    },
+    {
+      "name": "Auth Signup",
+      "method": "POST",
+      "path": "/auth/v1/signup",
+      "request_payload": {
+        "email": "qa_1771398099@example.com",
+        "password": "secret123",
+        "data": {
+          "full_name": "QA User"
+        }
+      },
+      "status_code": 200,
+      "response": {
+        "user": {
+          "id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+          "email": "qa_1771398099@example.com"
+        },
+        "session": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmZWY2MTIzNS05MzVjLTQzMjEtOGZlZC03YjNmMDlkOTUzZjEiLCJleHAiOjE3NzE0ODQ0OTl9.nnlyjUyn5QUXQ5jOGMZxWOJ9yC1hxLDGrds376UQ0aE",
+          "token_type": "bearer",
+          "expires_in": 86400
+        }
+      }
+    },
+    {
+      "name": "Auth Token Password",
+      "method": "POST",
+      "path": "/auth/v1/token?grant_type=password",
+      "request_payload": {
+        "email": "qa_1771398099@example.com",
+        "password": "secret123"
+      },
+      "status_code": 200,
+      "response": {
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmZWY2MTIzNS05MzVjLTQzMjEtOGZlZC03YjNmMDlkOTUzZjEiLCJleHAiOjE3NzE0ODQ0OTl9.nnlyjUyn5QUXQ5jOGMZxWOJ9yC1hxLDGrds376UQ0aE",
+        "refresh_token": "4339a650-3b83-4915-b078-e4653a244588",
+        "expires_in": 86400,
+        "token_type": "bearer",
+        "user": {
+          "id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+          "email": "qa_1771398099@example.com"
+        }
+      }
+    },
+    {
+      "name": "Auth Logout",
+      "method": "POST",
+      "path": "/auth/v1/logout",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Create Tenant",
+      "method": "POST",
+      "path": "/rest/v1/tenants",
+      "request_payload": {
+        "name": "Tenant-1771398099",
+        "status": "active",
+        "is_active": true
+      },
+      "status_code": 201,
+      "response": {
+        "id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "name": "Tenant-1771398099",
+        "status": "active",
+        "is_active": true,
+        "logo_url": null,
+        "username": null,
+        "password": null,
+        "max_skus": 50,
+        "max_images_per_month": 1000,
+        "max_images_per_week": 300,
+        "max_images_per_year": 10000,
+        "processed_images_this_month": 0,
+        "processed_images_this_week": 0,
+        "processed_images_this_year": 0,
+        "created_at": "2026-02-18T07:01:39.602248+00:00",
+        "updated_at": "2026-02-18T07:01:39.602249+00:00"
+      }
+    },
+    {
+      "name": "List Tenants",
+      "method": "GET",
+      "path": "/rest/v1/tenants?select=*&status=eq.active",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "88a46ea0-7868-47f8-87cb-9ba8c0bb0275",
+          "name": "Tenant-1771397879",
+          "status": "active",
+          "is_active": true,
+          "logo_url": "https://example.com/logo.png",
+          "username": null,
+          "password": null,
+          "max_skus": 50,
+          "max_images_per_month": 1000,
+          "max_images_per_week": 300,
+          "max_images_per_year": 10000,
+          "processed_images_this_month": 0,
+          "processed_images_this_week": 0,
+          "processed_images_this_year": 0,
+          "created_at": "2026-02-18T06:57:59.123040+00:00",
+          "updated_at": "2026-02-18T06:57:59.128286+00:00"
+        },
+        {
+          "id": "302aef13-456d-405e-bb0b-bb592065eb36",
+          "name": "Tenant-1771397902",
+          "status": "active",
+          "is_active": true,
+          "logo_url": "https://example.com/logo.png",
+          "username": null,
+          "password": null,
+          "max_skus": 50,
+          "max_images_per_month": 1000,
+          "max_images_per_week": 300,
+          "max_images_per_year": 10000,
+          "processed_images_this_month": 4,
+          "processed_images_this_week": 2,
+          "processed_images_this_year": 2,
+          "created_at": "2026-02-18T06:58:22.404901+00:00",
+          "updated_at": "2026-02-18T06:58:22.493546+00:00"
+        },
+        {
+          "id": "dd945445-1ea1-4d2f-b06c-2c86edfb0298",
+          "name": "Tenant-1771397943",
+          "status": "active",
+          "is_active": true,
+          "logo_url": "https://example.com/logo.png",
+          "username": null,
+          "password": null,
+          "max_skus": 50,
+          "max_images_per_month": 1000,
+          "max_images_per_week": 300,
+          "max_images_per_year": 10000,
+          "processed_images_this_month": 4,
+          "processed_images_this_week": 2,
+          "processed_images_this_year": 2,
+          "created_at": "2026-02-18T06:59:03.246350+00:00",
+          "updated_at": "2026-02-18T06:59:03.315726+00:00"
+        },
+        {
+          "id": "eb7f901b-aa61-4f87-b421-b98862754237",
+          "name": "Tenant-1771397954",
+          "status": "active",
+          "is_active": true,
+          "logo_url": "https://example.com/logo.png",
+          "username": null,
+          "password": null,
+          "max_skus": 50,
+          "max_images_per_month": 1000,
+          "max_images_per_week": 300,
+          "max_images_per_year": 10000,
+          "processed_images_this_month": 4,
+          "processed_images_this_week": 2,
+          "processed_images_this_year": 2,
+          "created_at": "2026-02-18T06:59:14.173299+00:00",
+          "updated_at": "2026-02-18T06:59:14.262128+00:00"
+        },
+        {
+          "id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "name": "Tenant-1771398099",
+          "status": "active",
+          "is_active": true,
+          "logo_url": null,
+          "username": null,
+          "password": null,
+          "max_skus": 50,
+          "max_images_per_month": 1000,
+          "max_images_per_week": 300,
+          "max_images_per_year": 10000,
+          "processed_images_this_month": 0,
+          "processed_images_this_week": 0,
+          "processed_images_this_year": 0,
+          "created_at": "2026-02-18T07:01:39.602248+00:00",
+          "updated_at": "2026-02-18T07:01:39.602249+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Update Tenant",
+      "method": "PATCH",
+      "path": "/rest/v1/tenants?id=eq.111608a9-b560-42a1-b72b-baa90c433b88",
+      "request_payload": {
+        "logo_url": "https://example.com/logo.png"
+      },
+      "status_code": 200,
+      "response": {
+        "id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "name": "Tenant-1771398099",
+        "status": "active",
+        "is_active": true,
+        "logo_url": "https://example.com/logo.png",
+        "username": null,
+        "password": null,
+        "max_skus": 50,
+        "max_images_per_month": 1000,
+        "max_images_per_week": 300,
+        "max_images_per_year": 10000,
+        "processed_images_this_month": 0,
+        "processed_images_this_week": 0,
+        "processed_images_this_year": 0,
+        "created_at": "2026-02-18T07:01:39.602248+00:00",
+        "updated_at": "2026-02-18T07:01:39.607678+00:00"
+      }
+    },
+    {
+      "name": "Create Store",
+      "method": "POST",
+      "path": "/rest/v1/stores",
+      "request_payload": {
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "name": "Main Store",
+        "city": "Cairo",
+        "country": "EG"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "name": "Main Store",
+        "address": null,
+        "city": "Cairo",
+        "country": "EG",
+        "created_at": "2026-02-18T07:01:39.609965+00:00",
+        "updated_at": "2026-02-18T07:01:39.609967+00:00"
+      }
+    },
+    {
+      "name": "List Stores",
+      "method": "GET",
+      "path": "/rest/v1/stores?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88&select=*",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "name": "Main Store",
+          "address": null,
+          "city": "Cairo",
+          "country": "EG",
+          "created_at": "2026-02-18T07:01:39.609965+00:00",
+          "updated_at": "2026-02-18T07:01:39.609967+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Update Store",
+      "method": "PATCH",
+      "path": "/rest/v1/stores?id=eq.7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+      "request_payload": {
+        "address": "Street 123"
+      },
+      "status_code": 200,
+      "response": {
+        "id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "name": "Main Store",
+        "address": "Street 123",
+        "city": "Cairo",
+        "country": "EG",
+        "created_at": "2026-02-18T07:01:39.609965+00:00",
+        "updated_at": "2026-02-18T07:01:39.615026+00:00"
+      }
+    },
+    {
+      "name": "Create Category",
+      "method": "POST",
+      "path": "/rest/v1/product_categories",
+      "request_payload": {
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "name": "Beverages",
+        "description": "Drinks"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "5e97e62e-d355-456a-ae1e-4e3c7f5bf2a0",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "name": "Beverages",
+        "description": "Drinks",
+        "created_at": "2026-02-18T07:01:39.617181+00:00",
+        "updated_at": "2026-02-18T07:01:39.617182+00:00"
+      }
+    },
+    {
+      "name": "List Categories",
+      "method": "GET",
+      "path": "/rest/v1/product_categories?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "5e97e62e-d355-456a-ae1e-4e3c7f5bf2a0",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "name": "Beverages",
+          "description": "Drinks",
+          "created_at": "2026-02-18T07:01:39.617181+00:00",
+          "updated_at": "2026-02-18T07:01:39.617182+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create SKU",
+      "method": "POST",
+      "path": "/rest/v1/skus",
+      "request_payload": {
+If still failing, paste these two outputs and I’ll give the exact final fix:
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "category_id": "5e97e62e-d355-456a-ae1e-4e3c7f5bf2a0",
+        "name": "Cola 330ml",
+        "description": "Soda",
+        "barcode": "1234567890",
+        "is_active": true,
+        "training_status": "completed"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "category_id": "5e97e62e-d355-456a-ae1e-4e3c7f5bf2a0",
+        "name": "Cola 330ml",
+        "description": "Soda",
+        "barcode": "1234567890",
+        "is_active": true,
+        "training_status": "completed",
+        "created_at": "2026-02-18T07:01:39.620925+00:00",
+        "updated_at": "2026-02-18T07:01:39.620927+00:00"
+      }
+    },
+    {
+      "name": "List SKUs",
+      "method": "GET",
+      "path": "/rest/v1/skus?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88&category_id=eq.5e97e62e-d355-456a-ae1e-4e3c7f5bf2a0&is_active=eq.true&training_status=eq.completed&select=*",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "category_id": "5e97e62e-d355-456a-ae1e-4e3c7f5bf2a0",
+          "name": "Cola 330ml",
+          "description": "Soda",
+          "barcode": "1234567890",
+          "is_active": true,
+          "training_status": "completed",
+          "created_at": "2026-02-18T07:01:39.620925+00:00",
+          "updated_at": "2026-02-18T07:01:39.620927+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create SKU Image",
+      "method": "POST",
+      "path": "/rest/v1/sku_images",
+      "request_payload": {
+        "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+        "image_url": "https://example.com/sku.jpg"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "8548102d-c51f-45e9-8364-fd51865f2399",
+        "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+        "image_url": "https://example.com/sku.jpg",
+        "created_at": "2026-02-18T07:01:39.625170+00:00"
+      }
+    },
+    {
+      "name": "List SKU Images",
+      "method": "GET",
+      "path": "/rest/v1/sku_images?sku_id=eq.815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "8548102d-c51f-45e9-8364-fd51865f2399",
+          "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+          "image_url": "https://example.com/sku.jpg",
+          "created_at": "2026-02-18T07:01:39.625170+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create Shelf",
+      "method": "POST",
+      "path": "/rest/v1/shelves",
+      "request_payload": {
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "name": "Aisle A Shelf 1",
+        "width_cm": 120
+      },
+      "status_code": 201,
+      "response": {
+        "id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "name": "Aisle A Shelf 1",
+        "description": null,
+        "location_in_store": null,
+        "width_cm": 120.0,
+        "created_at": "2026-02-18T07:01:39.629021+00:00",
+        "updated_at": "2026-02-18T07:01:39.629022+00:00"
+      }
+    },
+    {
+      "name": "List Shelves",
+      "method": "GET",
+      "path": "/rest/v1/shelves?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88&store_id=eq.7808be17-3cb7-48a1-a98b-9391b8d1f2ee&select=*",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+          "name": "Aisle A Shelf 1",
+          "description": null,
+          "location_in_store": null,
+          "width_cm": 120.0,
+          "created_at": "2026-02-18T07:01:39.629021+00:00",
+          "updated_at": "2026-02-18T07:01:39.629022+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Update Shelf",
+      "method": "PATCH",
+      "path": "/rest/v1/shelves?id=eq.fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+      "request_payload": {
+        "location_in_store": "Near cashier"
+      },
+      "status_code": 200,
+      "response": {
+        "id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "name": "Aisle A Shelf 1",
+        "description": null,
+        "location_in_store": "Near cashier",
+        "width_cm": 120.0,
+        "created_at": "2026-02-18T07:01:39.629021+00:00",
+        "updated_at": "2026-02-18T07:01:39.633469+00:00"
+      }
+    },
+    {
+      "name": "Create Shelf Product",
+      "method": "POST",
+      "path": "/rest/v1/shelf_products",
+      "request_payload": {
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+        "expected_facings": 5,
+        "position_order": 1
+      },
+      "status_code": 201,
+      "response": {
+        "id": "970403c6-9f6b-4479-94ea-fde71ae7e60c",
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+        "expected_facings": 5,
+        "position_order": 1,
+        "created_at": "2026-02-18T07:01:39.635686+00:00"
+      }
+    },
+    {
+      "name": "List Shelf Products",
+      "method": "GET",
+      "path": "/rest/v1/shelf_products?shelf_id=eq.fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "970403c6-9f6b-4479-94ea-fde71ae7e60c",
+          "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+          "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+          "expected_facings": 5,
+          "position_order": 1,
+          "created_at": "2026-02-18T07:01:39.635686+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create Shelf Image Record",
+      "method": "POST",
+      "path": "/rest/v1/shelf_images",
+      "request_payload": {
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "image_url": "https://example.com/shelf.jpg"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "147c584e-5ef5-469a-9ee0-fa0cad1baca4",
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "image_url": "https://example.com/shelf.jpg",
+        "detection_result": null,
+        "processed_at": null,
+        "created_at": "2026-02-18T07:01:39.639193+00:00"
+      }
+    },
+    {
+      "name": "List Shelf Images",
+      "method": "GET",
+      "path": "/rest/v1/shelf_images?shelf_id=eq.fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "147c584e-5ef5-469a-9ee0-fa0cad1baca4",
+          "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+          "image_url": "https://example.com/shelf.jpg",
+          "detection_result": null,
+          "processed_at": null,
+          "created_at": "2026-02-18T07:01:39.639193+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create Planogram Template",
+      "method": "POST",
+      "path": "/rest/v1/planogram_templates",
+      "request_payload": {
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "name": "Template 1",
+        "status": "active",
+        "layout": [
+          {
+            "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+            "facings": 5
+          }
+        ]
+      },
+      "status_code": 201,
+      "response": {
+        "id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "name": "Template 1",
+        "description": null,
+        "status": "active",
+        "layout": [
+          {
+            "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+            "facings": 5
+          }
+        ],
+        "created_by": null,
+        "created_at": "2026-02-18T07:01:39.643018+00:00",
+        "updated_at": "2026-02-18T07:01:39.643019+00:00"
+      }
+    },
+    {
+      "name": "List Planogram Templates",
+      "method": "GET",
+      "path": "/rest/v1/planogram_templates?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88&status=eq.active&select=*",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+          "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+          "name": "Template 1",
+          "description": null,
+          "status": "active",
+          "layout": [
+            {
+              "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+              "facings": 5
+            }
+          ],
+          "created_by": null,
+          "created_at": "2026-02-18T07:01:39.643018+00:00",
+          "updated_at": "2026-02-18T07:01:39.643019+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Update Planogram Template",
+      "method": "PATCH",
+      "path": "/rest/v1/planogram_templates?id=eq.4c357502-1ba6-4cb7-8240-d00dcf18701e",
+      "request_payload": {
+        "description": "Updated template"
+      },
+      "status_code": 200,
+      "response": {
+        "id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "name": "Template 1",
+        "description": "Updated template",
+        "status": "active",
+        "layout": [
+          {
+            "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+            "facings": 5
+          }
+        ],
+        "created_by": null,
+        "created_at": "2026-02-18T07:01:39.643018+00:00",
+        "updated_at": "2026-02-18T07:01:39.649918+00:00"
+      }
+    },
+    {
+      "name": "Create Planogram Version",
+      "method": "POST",
+      "path": "/rest/v1/planogram_versions",
+      "request_payload": {
+        "template_id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+        "version_number": 1,
+        "layout": [
+          {
+            "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b"
+          }
+        ]
+      },
+      "status_code": 201,
+      "response": {
+        "id": "ce570084-8f83-4dd1-bf38-f7dc08a0f241",
+        "template_id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+        "version_number": 1,
+        "layout": [
+          {
+            "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b"
+          }
+        ],
+        "change_notes": null,
+        "created_by": null,
+        "created_at": "2026-02-18T07:01:39.652569+00:00"
+      }
+    },
+    {
+      "name": "List Planogram Versions",
+      "method": "GET",
+      "path": "/rest/v1/planogram_versions?template_id=eq.4c357502-1ba6-4cb7-8240-d00dcf18701e&order=version_number.desc",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "ce570084-8f83-4dd1-bf38-f7dc08a0f241",
+          "template_id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+          "version_number": 1,
+          "layout": [
+            {
+              "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b"
+            }
+          ],
+          "change_notes": null,
+          "created_by": null,
+          "created_at": "2026-02-18T07:01:39.652569+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create Compliance Scan",
+      "method": "POST",
+      "path": "/rest/v1/compliance_scans",
+      "request_payload": {
+        "template_id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+        "shelf_image_id": "147c584e-5ef5-469a-9ee0-fa0cad1baca4",
+        "image_url": "https://example.com/scan.jpg",
+        "compliance_score": 92.5,
+        "total_expected": 10,
+        "total_found": 9,
+        "total_missing": 1,
+        "total_extra": 0
+      },
+      "status_code": 201,
+      "response": {
+        "id": "954e75ea-148e-48af-9442-fcd7eaffbe45",
+        "template_id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+        "shelf_image_id": "147c584e-5ef5-469a-9ee0-fa0cad1baca4",
+        "image_url": "https://example.com/scan.jpg",
+        "compliance_score": 92.5,
+        "total_expected": 10,
+        "total_found": 9,
+        "total_missing": 1,
+        "total_extra": 0,
+        "details": null,
+        "scanned_by": null,
+        "created_at": "2026-02-18T07:01:39.658086+00:00"
+      }
+    },
+    {
+      "name": "List Compliance Scans",
+      "method": "GET",
+      "path": "/rest/v1/compliance_scans?template_id=eq.4c357502-1ba6-4cb7-8240-d00dcf18701e&order=created_at.desc",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "954e75ea-148e-48af-9442-fcd7eaffbe45",
+          "template_id": "4c357502-1ba6-4cb7-8240-d00dcf18701e",
+          "shelf_image_id": "147c584e-5ef5-469a-9ee0-fa0cad1baca4",
+          "image_url": "https://example.com/scan.jpg",
+          "compliance_score": 92.5,
+          "total_expected": 10,
+          "total_found": 9,
+          "total_missing": 1,
+          "total_extra": 0,
+          "details": null,
+          "scanned_by": null,
+          "created_at": "2026-02-18T07:01:39.658086+00:00"
+        }
+      ]
+    },
+    {
+      "name": "List Profiles",
+      "method": "GET",
+      "path": "/rest/v1/profiles",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "aef9b33c-3ab4-4033-9458-7d3353e177a6",
+          "user_id": "d06f6968-0d7f-4178-9a11-d80567f30cbb",
+          "tenant_id": null,
+          "full_name": "QA Updated",
+          "username": "qa_user",
+          "avatar_url": null,
+          "last_login": "2026-02-18T06:57:59.118978+00:00",
+          "created_at": "2026-02-18T06:57:59.109509+00:00",
+          "updated_at": "2026-02-18T06:57:59.181385+00:00"
+        },
+        {
+          "id": "ad08f6c8-26d6-4a44-afab-03d8eda784e8",
+          "user_id": "54b16a9b-e163-44d8-95df-ee52ee258755",
+          "tenant_id": null,
+          "full_name": "QA Updated",
+          "username": "qa_user",
+          "avatar_url": null,
+          "last_login": "2026-02-18T06:58:22.401346+00:00",
+          "created_at": "2026-02-18T06:58:22.392807+00:00",
+          "updated_at": "2026-02-18T06:58:22.461758+00:00"
+        },
+        {
+          "id": "1351151f-165e-4958-ada3-e89a1ad2095c",
+          "user_id": "6527c20d-3eb6-4ceb-b6e5-652d309a2b71",
+          "tenant_id": null,
+          "full_name": "QA Updated",
+          "username": "qa_user",
+          "avatar_url": null,
+          "last_login": "2026-02-18T06:59:03.243500+00:00",
+          "created_at": "2026-02-18T06:59:03.237504+00:00",
+          "updated_at": "2026-02-18T06:59:03.293107+00:00"
+        },
+        {
+          "id": "2d7e0c2c-0b3c-441e-a7bd-e2012aeee4c4",
+          "user_id": "2ea4ffed-7261-4cbc-87e0-a786b19fec5c",
+          "tenant_id": null,
+          "full_name": "QA Updated",
+          "username": "qa_user",
+          "avatar_url": null,
+          "last_login": "2026-02-18T06:59:14.169757+00:00",
+          "created_at": "2026-02-18T06:59:14.160652+00:00",
+          "updated_at": "2026-02-18T06:59:14.230701+00:00"
+        },
+        {
+          "id": "3da4e67c-3adb-476a-a921-96aab71d3699",
+          "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+          "tenant_id": null,
+          "full_name": "QA User",
+          "username": null,
+          "avatar_url": null,
+          "last_login": "2026-02-18T07:01:39.598017+00:00",
+          "created_at": "2026-02-18T07:01:39.588804+00:00",
+          "updated_at": "2026-02-18T07:01:39.598437+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Update Profile",
+      "method": "PATCH",
+      "path": "/rest/v1/profiles?user_id=eq.fef61235-935c-4321-8fed-7b3f09d953f1",
+      "request_payload": {
+        "username": "qa_user",
+        "full_name": "QA Updated"
+      },
+      "status_code": 200,
+      "response": {
+        "id": "3da4e67c-3adb-476a-a921-96aab71d3699",
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "tenant_id": null,
+        "full_name": "QA Updated",
+        "username": "qa_user",
+        "avatar_url": null,
+        "last_login": "2026-02-18T07:01:39.598017+00:00",
+        "created_at": "2026-02-18T07:01:39.588804+00:00",
+        "updated_at": "2026-02-18T07:01:39.664588+00:00"
+      }
+    },
+    {
+      "name": "Create User Role",
+      "method": "POST",
+      "path": "/rest/v1/user_roles",
+      "request_payload": {
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "role": "tenant_admin"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "ff0f655f-e00e-42ab-97fb-717a13699f65",
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "role": "tenant_admin"
+      }
+    },
+    {
+      "name": "List User Roles",
+      "method": "GET",
+      "path": "/rest/v1/user_roles?user_id=eq.fef61235-935c-4321-8fed-7b3f09d953f1",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "ff0f655f-e00e-42ab-97fb-717a13699f65",
+          "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+          "role": "tenant_admin"
+        }
+      ]
+    },
+    {
+      "name": "Create User Store Access",
+      "method": "POST",
+      "path": "/rest/v1/user_store_access",
+      "request_payload": {
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "7cae5757-b3e7-45dc-b5f2-356db98539b2",
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "created_at": "2026-02-18T07:01:39.670842+00:00"
+      }
+    },
+    {
+      "name": "List User Store Access",
+      "method": "GET",
+      "path": "/rest/v1/user_store_access?user_id=eq.fef61235-935c-4321-8fed-7b3f09d953f1&store_id=eq.7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "7cae5757-b3e7-45dc-b5f2-356db98539b2",
+          "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+          "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+          "created_at": "2026-02-18T07:01:39.670842+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create User Shelf Access",
+      "method": "POST",
+      "path": "/rest/v1/user_shelf_access",
+      "request_payload": {
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670"
+      },
+      "status_code": 201,
+      "response": {
+        "id": "79f67bfb-a3b8-4514-8d95-c6894dda3978",
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "created_at": "2026-02-18T07:01:39.674487+00:00"
+      }
+    },
+    {
+      "name": "List User Shelf Access",
+      "method": "GET",
+      "path": "/rest/v1/user_shelf_access?user_id=eq.fef61235-935c-4321-8fed-7b3f09d953f1&shelf_id=eq.fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "79f67bfb-a3b8-4514-8d95-c6894dda3978",
+          "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+          "shelf_id": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+          "created_at": "2026-02-18T07:01:39.674487+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Create Notification",
+      "method": "POST",
+      "path": "/rest/v1/notifications",
+      "request_payload": {
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "title": "Low Stock",
+        "message": "SKU below threshold",
+        "type": "alert",
+        "is_read": false,
+        "metadata": {
+          "sku_id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b"
+        }
+      },
+      "status_code": 201,
+      "response": {
+        "id": "38073916-8f34-4f51-947d-34af42169243",
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "title": "Low Stock",
+        "message": "SKU below threshold",
+        "type": "alert",
+        "is_read": false,
+        "metadata": null,
+        "created_at": "2026-02-18T07:01:39.678083+00:00"
+      }
+    },
+    {
+      "name": "List Notifications",
+      "method": "GET",
+      "path": "/rest/v1/notifications?user_id=eq.fef61235-935c-4321-8fed-7b3f09d953f1&is_read=eq.false",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "38073916-8f34-4f51-947d-34af42169243",
+          "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "title": "Low Stock",
+          "message": "SKU below threshold",
+          "type": "alert",
+          "is_read": false,
+          "metadata": null,
+          "created_at": "2026-02-18T07:01:39.678083+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Patch Notification",
+      "method": "PATCH",
+      "path": "/rest/v1/notifications?id=eq.38073916-8f34-4f51-947d-34af42169243",
+      "request_payload": {
+        "is_read": true
+      },
+      "status_code": 200,
+      "response": {
+        "id": "38073916-8f34-4f51-947d-34af42169243",
+        "user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "title": "Low Stock",
+        "message": "SKU below threshold",
+        "type": "alert",
+        "is_read": true,
+        "metadata": null,
+        "created_at": "2026-02-18T07:01:39.678083+00:00"
+      }
+    },
+    {
+      "name": "RPC Check Tenant Quota",
+      "method": "POST",
+      "path": "/rest/v1/rpc/check_tenant_quota",
+      "request_payload": {
+        "_tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88"
+      },
+      "status_code": 200,
+      "response": {
+        "tenantId": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "canProcess": true,
+        "monthlyUsage": 0,
+        "monthlyLimit": 1000,
+        "weeklyUsage": 0,
+        "weeklyLimit": 300,
+        "yearlyUsage": 0,
+        "yearlyLimit": 10000
+      }
+    },
+    {
+      "name": "RPC Increment Usage Metric",
+      "method": "POST",
+      "path": "/rest/v1/rpc/increment_usage_metric",
+      "request_payload": {
+        "_tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "_period_type": "monthly",
+        "_images_count": 2
+      },
+      "status_code": 200,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "name": "RPC Get User Tenant ID",
+      "method": "POST",
+      "path": "/rest/v1/rpc/get_user_tenant_id",
+      "request_payload": {
+        "_user_id": "fef61235-935c-4321-8fed-7b3f09d953f1"
+      },
+      "status_code": 200,
+      "response": {
+        "tenant_id": null
+      }
+    },
+    {
+      "name": "RPC Has Role",
+      "method": "POST",
+      "path": "/rest/v1/rpc/has_role",
+      "request_payload": {
+        "_user_id": "fef61235-935c-4321-8fed-7b3f09d953f1",
+        "_role": "tenant_admin"
+      },
+      "status_code": 200,
+      "response": {
+        "has_role": true
+      }
+    },
+    {
+      "name": "Function Detect SKUs",
+      "method": "POST",
+      "path": "/functions/v1/detect-skus",
+      "request_payload": {
+        "imageBase64": "ZmFrZS1pbWFnZS1ieXRlcw==",
+        "tenantId": "111608a9-b560-42a1-b72b-baa90c433b88",
+        "storeId": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+        "skusToDetect": [
+          {
+            "id": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+            "name": "Cola 330ml",
+            "imageUrls": [
+              "https://example.com/sku.jpg"
+            ]
+          }
+        ]
+      },
+      "status_code": 200,
+      "response": {
+        "success": true,
+        "detectionId": "a245b504-e6cf-4772-8417-324f1d12fbce",
+        "result": {
+          "detections": [
+            {
+              "skuId": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+              "skuName": "Cola 330ml",
+              "isAvailable": true,
+              "facings": 1,
+              "confidence": 0.9,
+              "boundingBox": {
+                "x": 0.1,
+                "y": 0.1,
+                "width": 0.2,
+                "height": 0.2
+              }
+            }
+          ],
+          "missingSkus": [],
+          "shareOfShelf": {
+            "totalShelfArea": 1.0,
+            "trainedProductsArea": 0.5,
+            "percentage": 50.0
+          },
+          "totalFacings": 1,
+          "summary": "Detection completed"
+        }
+      }
+    },
+    {
+      "name": "Function Roboflow Detect",
+      "method": "POST",
+      "path": "/functions/v1/roboflow-detect",
+      "request_payload": {
+        "imageUrl": "https://example.com/shelf.jpg",
+        "shelfId": "fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+        "tenantId": "111608a9-b560-42a1-b72b-baa90c433b88"
+      },
+      "status_code": 200,
+      "response": {
+        "success": true,
+        "result": {
+          "workflow": "roboflow",
+          "imageUrl": "https://example.com/shelf.jpg",
+          "predictions": [],
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "name": "Storage Upload Shelf Image",
+      "method": "POST",
+      "path": "/storage/v1/object/shelf-images/111608a9-b560-42a1-b72b-baa90c433b88/2026-02-18/shelf.jpg",
+      "request_payload": {
+        "file": "<binary image/jpeg 20 bytes>"
+      },
+      "status_code": 200,
+      "response": {
+        "Key": "shelf-images/111608a9-b560-42a1-b72b-baa90c433b88/2026-02-18/shelf.jpg"
+      }
+    },
+    {
+      "name": "Storage Download Shelf Image",
+      "method": "GET",
+      "path": "/storage/v1/object/shelf-images/111608a9-b560-42a1-b72b-baa90c433b88/2026-02-18/shelf.jpg",
+      "request_payload": null,
+      "status_code": 200,
+      "response": "fake-jpeg-shelf-data"
+    },
+    {
+      "name": "Storage Upload SKU Training Image",
+      "method": "POST",
+      "path": "/storage/v1/object/sku-training-images/111608a9-b560-42a1-b72b-baa90c433b88/815724a9-fa4d-49f1-81a4-4e08f5c5a29b/sku.jpg",
+      "request_payload": {
+        "file": "<binary image/jpeg 27 bytes>"
+      },
+      "status_code": 200,
+      "response": {
+        "Key": "sku-training-images/111608a9-b560-42a1-b72b-baa90c433b88/815724a9-fa4d-49f1-81a4-4e08f5c5a29b/sku.jpg"
+      }
+    },
+    {
+      "name": "Storage Download SKU Training Image",
+      "method": "GET",
+      "path": "/storage/v1/object/sku-training-images/111608a9-b560-42a1-b72b-baa90c433b88/815724a9-fa4d-49f1-81a4-4e08f5c5a29b/sku.jpg",
+      "request_payload": null,
+      "status_code": 200,
+      "response": "fake-jpeg-sku-training-data"
+    },
+    {
+      "name": "List Detections",
+      "method": "GET",
+      "path": "/rest/v1/detections?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88&store_id=eq.7808be17-3cb7-48a1-a98b-9391b8d1f2ee&order=processed_at.desc",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "a245b504-e6cf-4772-8417-324f1d12fbce",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "store_id": "7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+          "original_image_url": "/storage/v1/object/shelf-images/1df42595-05ca-4217-aa84-58271e99c845.jpg",
+          "annotated_image_url": null,
+          "detection_result": {
+            "detections": [
+              {
+                "skuId": "815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+                "skuName": "Cola 330ml",
+                "isAvailable": true,
+                "facings": 1,
+                "confidence": 0.9,
+                "boundingBox": {
+                  "x": 0.1,
+                  "y": 0.1,
+                  "width": 0.2,
+                  "height": 0.2
+                }
+              }
+            ],
+            "missingSkus": []
+          },
+          "share_of_shelf_percentage": 50.0,
+          "total_facings": 1,
+          "detected_skus": 1,
+          "missing_skus": 0,
+          "processed_at": "2026-02-18T07:01:39.691659+00:00"
+        }
+      ]
+    },
+    {
+      "name": "List Usage Metrics",
+      "method": "GET",
+      "path": "/rest/v1/usage_metrics?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88&period_type=eq.monthly",
+      "request_payload": null,
+      "status_code": 200,
+      "response": [
+        {
+          "id": "ede08ed0-61e9-472c-8095-1341ad0ee79e",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "period_type": "monthly",
+          "period_start": "2026-02-18T07:01:39.685088+00:00",
+          "images_processed": 2,
+          "training_jobs": 0,
+          "created_at": "2026-02-18T07:01:39.686478+00:00",
+          "updated_at": "2026-02-18T07:01:39.686479+00:00"
+        },
+        {
+          "id": "022e2929-4eda-48e5-8ee6-3872a0337831",
+          "tenant_id": "111608a9-b560-42a1-b72b-baa90c433b88",
+          "period_type": "monthly",
+          "period_start": "2026-02-18T07:01:39.691169+00:00",
+          "images_processed": 1,
+          "training_jobs": 0,
+          "created_at": "2026-02-18T07:01:39.692387+00:00",
+          "updated_at": "2026-02-18T07:01:39.692388+00:00"
+        }
+      ]
+    },
+    {
+      "name": "List Models",
+      "method": "GET",
+      "path": "/rest/v1/models?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88",
+      "request_payload": null,
+      "status_code": 200,
+      "response": []
+    },
+    {
+      "name": "List Processing Jobs",
+      "method": "GET",
+      "path": "/rest/v1/processing_jobs?tenant_id=eq.111608a9-b560-42a1-b72b-baa90c433b88&status=eq.pending",
+      "request_payload": null,
+      "status_code": 200,
+      "response": []
+    },
+    {
+      "name": "List Detection Results",
+      "method": "GET",
+      "path": "/rest/v1/detection_results?job_id=eq.non-existent",
+      "request_payload": null,
+      "status_code": 200,
+      "response": []
+    },
+    {
+      "name": "Delete SKU Image",
+      "method": "DELETE",
+      "path": "/rest/v1/sku_images?id=eq.8548102d-c51f-45e9-8364-fd51865f2399",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete User Store Access",
+      "method": "DELETE",
+      "path": "/rest/v1/user_store_access?id=eq.7cae5757-b3e7-45dc-b5f2-356db98539b2",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete User Shelf Access",
+      "method": "DELETE",
+      "path": "/rest/v1/user_shelf_access?id=eq.79f67bfb-a3b8-4514-8d95-c6894dda3978",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete Shelf Product",
+      "method": "DELETE",
+      "path": "/rest/v1/shelf_products?id=eq.970403c6-9f6b-4479-94ea-fde71ae7e60c",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete SKU",
+      "method": "DELETE",
+      "path": "/rest/v1/skus?id=eq.815724a9-fa4d-49f1-81a4-4e08f5c5a29b",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete Category",
+      "method": "DELETE",
+      "path": "/rest/v1/product_categories?id=eq.5e97e62e-d355-456a-ae1e-4e3c7f5bf2a0",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete Shelf",
+      "method": "DELETE",
+      "path": "/rest/v1/shelves?id=eq.fecce0bb-b3e2-48cb-9ab4-d34a3917c670",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete Store",
+      "method": "DELETE",
+      "path": "/rest/v1/stores?id=eq.7808be17-3cb7-48a1-a98b-9391b8d1f2ee",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    },
+    {
+      "name": "Delete Tenant",
+      "method": "DELETE",
+      "path": "/rest/v1/tenants?id=eq.111608a9-b560-42a1-b72b-baa90c433b88",
+      "request_payload": null,
+      "status_code": 204,
+      "response": null
+    }
+  ]
+}
