@@ -1,7 +1,10 @@
 import base64
 import io
+import json
 import logging
 import os
+import urllib.error
+import urllib.request
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -40,7 +43,12 @@ MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 MINIO_PUBLIC_ENDPOINT = os.getenv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9090")
-MINIO_DEFAULT_BUCKETS = os.getenv("MINIO_DEFAULT_BUCKETS", "shelf-images,sku-training-images")
+MINIO_DEFAULT_BUCKETS = os.getenv("MINIO_DEFAULT_BUCKETS", "shelf-images,sku-training-images,dataset-images")
+INFERENCING_SERVICE_URL = os.getenv("INFERENCING_SERVICE_URL", "").strip()
+TRAINING_SERVICE_URL = os.getenv("TRAINING_SERVICE_URL", "").strip()
+SERVICE_HTTP_TIMEOUT_SECONDS = float(os.getenv("SERVICE_HTTP_TIMEOUT_SECONDS", "10"))
+DEFAULT_LIST_LIMIT = int(os.getenv("DEFAULT_LIST_LIMIT", "100"))
+MAX_LIST_LIMIT = int(os.getenv("MAX_LIST_LIMIT", "500"))
 
 logger = logging.getLogger("shelfvision")
 
@@ -264,6 +272,18 @@ class UserShelfAccess(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
+class Admin(Base, TimestampMixin):
+    __tablename__ = "admins"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    password: Mapped[str] = mapped_column(String(255))
+    full_name: Mapped[str] = mapped_column(String(255))
+    monthly_limit: Mapped[int] = mapped_column(Integer, default=10000)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
 class Notification(Base):
     __tablename__ = "notifications"
 
@@ -330,7 +350,74 @@ class DetectionResult(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+class Dataset(Base, TimestampMixin):
+    __tablename__ = "datasets"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    tenant_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("tenants.id"), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(32), default="draft")
+    image_count: Mapped[int] = mapped_column(Integer, default=0)
+    class_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_by: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+
+
+class DatasetImageSet(Base):
+    __tablename__ = "dataset_image_sets"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    dataset_id: Mapped[str] = mapped_column(String(36), ForeignKey("datasets.id"), index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    image_count: Mapped[int] = mapped_column(Integer, default=0)
+    is_trained: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class DatasetImage(Base):
+    __tablename__ = "dataset_images"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    dataset_id: Mapped[str] = mapped_column(String(36), ForeignKey("datasets.id"), index=True)
+    image_set_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("dataset_image_sets.id"), nullable=True)
+    image_url: Mapped[str] = mapped_column(Text)
+    file_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    is_annotated: Mapped[bool] = mapped_column(Boolean, default=False)
+    annotations: Mapped[Optional[list[dict[str, Any]]]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class DatasetClass(Base):
+    __tablename__ = "dataset_classes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    dataset_id: Mapped[str] = mapped_column(String(36), ForeignKey("datasets.id"), index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    color: Mapped[str] = mapped_column(String(16))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class TrainingJob(Base, TimestampMixin):
+    __tablename__ = "training_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    dataset_id: Mapped[str] = mapped_column(String(36), ForeignKey("datasets.id"), index=True)
+    status: Mapped[str] = mapped_column(String(32), default="pending")
+    epochs: Mapped[int] = mapped_column(Integer, default=100)
+    batch_size: Mapped[int] = mapped_column(Integer, default=16)
+    model_type: Mapped[str] = mapped_column(String(32), default="yolov8")
+    progress: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    result_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+
+
+engine_kwargs: dict[str, Any] = {"pool_pre_ping": True}
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
@@ -441,6 +528,56 @@ def apply_query_filters(query, model, params: dict[str, str]):
     return query
 
 
+def apply_pagination(query, params: dict[str, str]):
+    limit_raw = params.get("limit")
+    offset_raw = params.get("offset")
+
+    limit = DEFAULT_LIST_LIMIT
+    if limit_raw:
+        try:
+            limit = int(parse_eq(limit_raw))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="Invalid limit") from exc
+    if limit < 1 or limit > MAX_LIST_LIMIT:
+        raise HTTPException(status_code=400, detail=f"limit must be between 1 and {MAX_LIST_LIMIT}")
+
+    offset = 0
+    if offset_raw:
+        try:
+            offset = int(parse_eq(offset_raw))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="Invalid offset") from exc
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="offset must be >= 0")
+
+    return query.offset(offset).limit(limit)
+
+
+def _start_external_job(service_url: str, payload: dict[str, Any]) -> dict[str, Any]:
+    if not service_url:
+        return {"status": "processing"}
+
+    req = urllib.request.Request(
+        service_url,
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=SERVICE_HTTP_TIMEOUT_SECONDS) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise HTTPException(status_code=502, detail=f"External service error ({exc.code}): {body}") from exc
+    except urllib.error.URLError as exc:
+        raise HTTPException(status_code=502, detail=f"External service unavailable: {exc}") from exc
+
+    try:
+        return json.loads(raw) if raw else {}
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail="External service returned invalid JSON") from exc
+
+
 def require_security(
     authorization: Optional[str] = Header(default=None),
     apikey: Optional[str] = Header(default=None),
@@ -507,6 +644,17 @@ class RoboflowDetectRequest(BaseModel):
     tenantId: Optional[str] = None
 
 
+class StartTrainingRequest(BaseModel):
+    dataset_id: str
+    epochs: int = 100
+    batch_size: int = 16
+
+
+class ExportDatasetRequest(BaseModel):
+    dataset_id: str
+    format: str = "yolov8"
+
+
 app = FastAPI(title="ShelfVision API", version="2.0.0")
 
 cors_origins_raw = CORS_ALLOW_ORIGINS.strip()
@@ -531,6 +679,7 @@ def startup() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     (UPLOAD_DIR / "shelf-images").mkdir(parents=True, exist_ok=True)
     (UPLOAD_DIR / "sku-training-images").mkdir(parents=True, exist_ok=True)
+    (UPLOAD_DIR / "dataset-images").mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
     try:
         client = get_minio_client()
@@ -546,6 +695,7 @@ def startup() -> None:
 # Generic REST CRUD
 # -----------------------------
 CRUD_RESOURCES: dict[str, Any] = {
+    "admins": Admin,
     "tenants": Tenant,
     "stores": Store,
     "skus": SKU,
@@ -567,11 +717,16 @@ CRUD_RESOURCES: dict[str, Any] = {
     "models": Model,
     "processing_jobs": ProcessingJob,
     "detection_results": DetectionResult,
+    "datasets": Dataset,
+    "dataset_image_sets": DatasetImageSet,
+    "dataset_images": DatasetImage,
+    "dataset_classes": DatasetClass,
+    "training_jobs": TrainingJob,
 }
 
-READ_ONLY = {"detections", "usage_metrics", "models", "processing_jobs", "detection_results"}
-NO_PATCH = {"sku_images", "planogram_versions", "shelf_products", "user_roles", "user_store_access", "user_shelf_access", "usage_metrics", "models", "processing_jobs", "detection_results", "detections", "compliance_scans"}
-NO_DELETE = {"compliance_scans", "planogram_versions", "usage_metrics", "models", "processing_jobs", "detection_results", "detections", "profiles"}
+READ_ONLY = {"detections", "usage_metrics", "models", "processing_jobs", "detection_results", "training_jobs"}
+NO_PATCH = {"sku_images", "planogram_versions", "shelf_products", "user_roles", "user_store_access", "user_shelf_access", "usage_metrics", "models", "processing_jobs", "detection_results", "detections", "compliance_scans", "training_jobs"}
+NO_DELETE = {"compliance_scans", "planogram_versions", "usage_metrics", "models", "processing_jobs", "detection_results", "detections", "profiles", "training_jobs"}
 PATCH_KEY = {
     "profiles": "user_id",
 }
@@ -673,8 +828,10 @@ def list_resource(
     if not model:
         raise HTTPException(status_code=404, detail="Unknown resource")
 
+    params = dict(request.query_params)
     query = db.query(model)
-    query = apply_query_filters(query, model, dict(request.query_params))
+    query = apply_query_filters(query, model, params)
+    query = apply_pagination(query, params)
     rows = query.all()
     return [to_dict(row) for row in rows]
 
@@ -889,34 +1046,29 @@ def detect_skus(payload: DetectSKUsRequest, _: str = Depends(require_security), 
     image_id = str(uuid.uuid4())
     image_path = UPLOAD_DIR / "shelf-images" / f"{image_id}.jpg"
     image_path.write_bytes(image_bytes)
-
-    skus = payload.skusToDetect or []
-    detections = []
-    for sku in skus:
-        detections.append(
-            {
-                "skuId": sku.get("id"),
-                "skuName": sku.get("name", "Unknown"),
-                "isAvailable": True,
-                "facings": 1,
-                "confidence": 0.9,
-                "boundingBox": {"x": 0.1, "y": 0.1, "width": 0.2, "height": 0.2},
-            }
-        )
-
-    missing = []
-    detection_record = Detection(
+    job = ProcessingJob(
         tenant_id=payload.tenantId,
         store_id=payload.storeId,
+        model_id=None,
         original_image_url=f"/storage/v1/object/shelf-images/{image_id}.jpg",
-        annotated_image_url=None,
-        detection_result={"detections": detections, "missingSkus": missing},
-        share_of_shelf_percentage=50.0,
-        total_facings=sum(d["facings"] for d in detections),
-        detected_skus=len(detections),
-        missing_skus=len(missing),
+        status="pending",
+        start_time=datetime.now(timezone.utc),
     )
-    db.add(detection_record)
+    db.add(job)
+    db.flush()
+
+    external_payload = {
+        "job_id": job.id,
+        "tenant_id": payload.tenantId,
+        "store_id": payload.storeId,
+        "image_path": str(image_path),
+        "skus_to_detect": payload.skusToDetect or [],
+    }
+    external_result = _start_external_job(INFERENCING_SERVICE_URL, external_payload)
+    external_status = str(external_result.get("status", "processing"))
+    job.status = external_status if external_status in {"pending", "processing", "completed", "failed"} else "processing"
+    if job.status == "failed":
+        job.error_message = str(external_result.get("message", "Inference job failed"))
 
     tenant.processed_images_this_month = (tenant.processed_images_this_month or 0) + 1
     tenant.processed_images_this_week = (tenant.processed_images_this_week or 0) + 1
@@ -932,22 +1084,14 @@ def detect_skus(payload: DetectSKUsRequest, _: str = Depends(require_security), 
         db.add(metric)
 
     db.commit()
-    db.refresh(detection_record)
+    db.refresh(job)
 
     return {
         "success": True,
-        "detectionId": detection_record.id,
-        "result": {
-            "detections": detections,
-            "missingSkus": missing,
-            "shareOfShelf": {
-                "totalShelfArea": 1.0,
-                "trainedProductsArea": 0.5,
-                "percentage": 50.0,
-            },
-            "totalFacings": sum(d["facings"] for d in detections),
-            "summary": "Detection completed",
-        },
+        "job_id": job.id,
+        "status": job.status,
+        "upstream_job_id": external_result.get("job_id"),
+        "message": external_result.get("message", "Inference job started"),
     }
 
 
@@ -978,6 +1122,70 @@ def roboflow_detect(payload: RoboflowDetectRequest, _: str = Depends(require_sec
 
     db.commit()
     return {"success": True, "result": result}
+
+
+@app.post("/functions/v1/start-training")
+def start_training(payload: StartTrainingRequest, user_id: str = Depends(require_user), db: Session = Depends(get_db)):
+    dataset = db.query(Dataset).filter(Dataset.id == payload.dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    job = TrainingJob(
+        dataset_id=payload.dataset_id,
+        status="pending",
+        epochs=payload.epochs,
+        batch_size=payload.batch_size,
+        created_by=user_id,
+        started_at=datetime.now(timezone.utc),
+    )
+    db.add(job)
+    db.flush()
+
+    external_payload = {
+        "job_id": job.id,
+        "dataset_id": payload.dataset_id,
+        "epochs": payload.epochs,
+        "batch_size": payload.batch_size,
+        "created_by": user_id,
+    }
+    external_result = _start_external_job(TRAINING_SERVICE_URL, external_payload)
+    external_status = str(external_result.get("status", "training"))
+    job.status = external_status if external_status in {"pending", "training", "completed", "failed"} else "training"
+    if job.status == "failed":
+        job.error_message = str(external_result.get("message", "Training job failed"))
+        job.completed_at = datetime.now(timezone.utc)
+
+    db.commit()
+    db.refresh(job)
+
+    return {
+        "success": True,
+        "job_id": job.id,
+        "status": job.status,
+        "upstream_job_id": external_result.get("job_id"),
+        "message": external_result.get("message", "Training job started"),
+    }
+
+
+@app.post("/functions/v1/export-dataset")
+def export_dataset(payload: ExportDatasetRequest, _: str = Depends(require_security), db: Session = Depends(get_db)):
+    dataset = db.query(Dataset).filter(Dataset.id == payload.dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    if payload.format not in {"yolov8", "coco", "pascal_voc"}:
+        raise HTTPException(status_code=400, detail="Unsupported format")
+
+    image_count = db.query(DatasetImage).filter(DatasetImage.dataset_id == payload.dataset_id).count()
+    class_count = db.query(DatasetClass).filter(DatasetClass.dataset_id == payload.dataset_id).count()
+    download_url = f"/storage/v1/object/dataset-exports/{payload.dataset_id}.{payload.format}.zip"
+
+    return {
+        "success": True,
+        "download_url": download_url,
+        "image_count": image_count,
+        "class_count": class_count,
+    }
 
 
 # -----------------------------
@@ -1236,6 +1444,37 @@ def download_sku_training_image(path: str, _: str = Depends(require_security)):
     client = get_minio_client()
     try:
         response = client.get_object("sku-training-images", object_key)
+        data = response.read()
+        content_type = response.headers.get("Content-Type", "application/octet-stream")
+    except S3Error:
+        raise HTTPException(status_code=404, detail="Not found")
+    return Response(content=data, media_type=content_type)
+
+
+@app.post("/storage/v1/object/dataset-images/{path:path}")
+async def upload_dataset_image(
+    path: str,
+    file: UploadFile | None = File(default=None),
+    _: str = Depends(require_security),
+):
+    if file is None:
+        raise HTTPException(status_code=400, detail="file is required")
+    object_key = _sanitize_object_path(path)
+    client = get_minio_client()
+    data = await file.read()
+    try:
+        upload_to_minio(client, "dataset-images", object_key, data, file.content_type)
+    except S3Error as exc:
+        raise HTTPException(status_code=500, detail=f"MinIO upload failed: {exc}") from exc
+    return {"Key": f"dataset-images/{object_key}", "url": f"{MINIO_PUBLIC_ENDPOINT}/dataset-images/{object_key}"}
+
+
+@app.get("/storage/v1/object/dataset-images/{path:path}")
+def download_dataset_image(path: str, _: str = Depends(require_security)):
+    object_key = _sanitize_object_path(path)
+    client = get_minio_client()
+    try:
+        response = client.get_object("dataset-images", object_key)
         data = response.read()
         content_type = response.headers.get("Content-Type", "application/octet-stream")
     except S3Error:
