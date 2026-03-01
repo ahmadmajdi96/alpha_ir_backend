@@ -22,7 +22,7 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "${MINIO_API_PORT:-9090}:9090"
+      - "${MINIO_API_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9091}:9091"
     restart: unless-stopped
 
@@ -33,15 +33,15 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg2://shelfvision:shelfvision@db:5432/shelfvision
       UPLOAD_DIR: /data/storage
-      MINIO_ENDPOINT: minio:9090
+      MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_SECURE: "false"
-      MINIO_PUBLIC_ENDPOINT: http://localhost:${MINIO_API_PORT:-9090}
+      MINIO_PUBLIC_ENDPOINT: http://localhost:${MINIO_API_PORT:-9000}
     volumes:
       - storage_data:/data/storage
     ports:
-        - "${APP_PORT:-8787}:8787"
+      - "${APP_PORT:-8787}:8787"
     depends_on:
       db:
         condition: service_healthy

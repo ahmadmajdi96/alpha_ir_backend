@@ -38,11 +38,11 @@ CORS_ALLOW_ORIGINS = os.getenv(
     "CORS_ALLOW_ORIGINS",
     "*",
 )
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9090")
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
-MINIO_PUBLIC_ENDPOINT = os.getenv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9090")
+MINIO_PUBLIC_ENDPOINT = os.getenv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9000")
 MINIO_DEFAULT_BUCKETS = os.getenv("MINIO_DEFAULT_BUCKETS", "shelf-images,sku-training-images,dataset-images")
 INFERENCING_SERVICE_URL = os.getenv("INFERENCING_SERVICE_URL", "").strip()
 TRAINING_SERVICE_URL = os.getenv("TRAINING_SERVICE_URL", "").strip()
@@ -466,14 +466,19 @@ def ensure_minio_bucket(client: Minio, bucket: str) -> None:
 
 
 def upload_to_minio(client: Minio, bucket: str, object_key: str, data: bytes, content_type: Optional[str]) -> None:
-    ensure_minio_bucket(client, bucket)
-    client.put_object(
-        bucket_name=bucket,
-        object_name=object_key,
-        data=io.BytesIO(data),
-        length=len(data),
-        content_type=content_type or "application/octet-stream",
-    )
+    try:
+        ensure_minio_bucket(client, bucket)
+        client.put_object(
+            bucket_name=bucket,
+            object_name=object_key,
+            data=io.BytesIO(data),
+            length=len(data),
+            content_type=content_type or "application/octet-stream",
+        )
+    except S3Error:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
 
 
 def to_dict(row: Any) -> dict[str, Any]:
@@ -1427,6 +1432,8 @@ def download_shelf_image(path: str, _: str = Depends(require_security)):
         content_type = response.headers.get("Content-Type", "application/octet-stream")
     except S3Error:
         raise HTTPException(status_code=404, detail="Not found")
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
     return Response(content=data, media_type=content_type)
 
 
@@ -1490,6 +1497,8 @@ def download_sku_training_image(path: str, _: str = Depends(require_security)):
         content_type = response.headers.get("Content-Type", "application/octet-stream")
     except S3Error:
         raise HTTPException(status_code=404, detail="Not found")
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
     return Response(content=data, media_type=content_type)
 
 
@@ -1521,6 +1530,8 @@ def download_dataset_image(path: str, _: str = Depends(require_security)):
         content_type = response.headers.get("Content-Type", "application/octet-stream")
     except S3Error:
         raise HTTPException(status_code=404, detail="Not found")
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
     return Response(content=data, media_type=content_type)
 
 
@@ -1579,6 +1590,8 @@ def download_storage_object(bucket: str, path: str, _: str = Depends(require_sec
         content_type = response.headers.get("Content-Type", "application/octet-stream")
     except S3Error:
         raise HTTPException(status_code=404, detail="Not found")
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
     return Response(content=data, media_type=content_type)
 
 
