@@ -44,6 +44,9 @@ MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 MINIO_PUBLIC_ENDPOINT = os.getenv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9000")
 MINIO_DEFAULT_BUCKETS = os.getenv("MINIO_DEFAULT_BUCKETS", "shelf-images,sku-training-images,dataset-images")
+PUBLIC_BUCKETS = {
+    b.strip() for b in os.getenv("PUBLIC_BUCKETS", "dataset-images").split(",") if b.strip()
+}
 INFERENCING_SERVICE_URL = os.getenv("INFERENCING_SERVICE_URL", "").strip()
 TRAINING_SERVICE_URL = os.getenv("TRAINING_SERVICE_URL", "").strip()
 SERVICE_HTTP_TIMEOUT_SECONDS = float(os.getenv("SERVICE_HTTP_TIMEOUT_SECONDS", "10"))
@@ -1378,6 +1381,19 @@ def _sanitize_object_path(object_path: str) -> str:
     return cleaned
 
 
+def _read_object_response(bucket: str, object_key: str) -> Response:
+    client = get_minio_client()
+    try:
+        response = client.get_object(bucket, object_key)
+        data = response.read()
+        content_type = response.headers.get("Content-Type", "application/octet-stream")
+    except S3Error:
+        raise HTTPException(status_code=404, detail="Not found")
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
+    return Response(content=data, media_type=content_type)
+
+
 @app.post("/storage/v1/object/shelf-images/{path:path}")
 async def upload_shelf_image(
     path: str,
@@ -1425,16 +1441,7 @@ async def upload_shelf_image(
 @app.get("/storage/v1/object/shelf-images/{path:path}")
 def download_shelf_image(path: str, _: str = Depends(require_security)):
     object_key = _sanitize_object_path(path)
-    client = get_minio_client()
-    try:
-        response = client.get_object("shelf-images", object_key)
-        data = response.read()
-        content_type = response.headers.get("Content-Type", "application/octet-stream")
-    except S3Error:
-        raise HTTPException(status_code=404, detail="Not found")
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
-    return Response(content=data, media_type=content_type)
+    return _read_object_response("shelf-images", object_key)
 
 
 @app.post("/storage/v1/object/sku-training-images/{path:path}")
@@ -1490,16 +1497,7 @@ async def upload_sku_training_image(
 @app.get("/storage/v1/object/sku-training-images/{path:path}")
 def download_sku_training_image(path: str, _: str = Depends(require_security)):
     object_key = _sanitize_object_path(path)
-    client = get_minio_client()
-    try:
-        response = client.get_object("sku-training-images", object_key)
-        data = response.read()
-        content_type = response.headers.get("Content-Type", "application/octet-stream")
-    except S3Error:
-        raise HTTPException(status_code=404, detail="Not found")
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
-    return Response(content=data, media_type=content_type)
+    return _read_object_response("sku-training-images", object_key)
 
 
 @app.post("/storage/v1/object/dataset-images/{path:path}")
@@ -1523,16 +1521,15 @@ async def upload_dataset_image(
 @app.get("/storage/v1/object/dataset-images/{path:path}")
 def download_dataset_image(path: str, _: str = Depends(require_security)):
     object_key = _sanitize_object_path(path)
-    client = get_minio_client()
-    try:
-        response = client.get_object("dataset-images", object_key)
-        data = response.read()
-        content_type = response.headers.get("Content-Type", "application/octet-stream")
-    except S3Error:
+    return _read_object_response("dataset-images", object_key)
+
+
+@app.get("/storage/v1/object/public/{bucket}/{path:path}")
+def download_public_storage_object(bucket: str, path: str):
+    if bucket not in PUBLIC_BUCKETS:
         raise HTTPException(status_code=404, detail="Not found")
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
-    return Response(content=data, media_type=content_type)
+    object_key = _sanitize_object_path(path)
+    return _read_object_response(bucket, object_key)
 
 
 @app.post("/storage/v1/object/{bucket}/{path:path}")
@@ -1583,16 +1580,7 @@ async def upload_multiple_sku_images(
 @app.get("/storage/v1/object/{bucket}/{path:path}")
 def download_storage_object(bucket: str, path: str, _: str = Depends(require_security)):
     object_key = _sanitize_object_path(path)
-    client = get_minio_client()
-    try:
-        response = client.get_object(bucket, object_key)
-        data = response.read()
-        content_type = response.headers.get("Content-Type", "application/octet-stream")
-    except S3Error:
-        raise HTTPException(status_code=404, detail="Not found")
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=503, detail=f"MinIO unavailable: {exc}") from exc
-    return Response(content=data, media_type=content_type)
+    return _read_object_response(bucket, object_key)
 
 
 @app.get("/health")

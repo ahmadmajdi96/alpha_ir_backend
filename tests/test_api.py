@@ -15,6 +15,7 @@ def app_ctx(tmp_path, monkeypatch):
     monkeypatch.setenv("MINIO_ENDPOINT", "127.0.0.1:1")
     monkeypatch.setenv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9000")
     monkeypatch.setenv("MINIO_DEFAULT_BUCKETS", "shelf-images,sku-training-images,dataset-images")
+    monkeypatch.setenv("PUBLIC_BUCKETS", "dataset-images")
     monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "storage"))
 
     import app.main as app_main
@@ -263,3 +264,34 @@ def test_export_dataset_returns_counts(app_ctx):
     assert body["success"] is True
     assert body["image_count"] == 2
     assert body["class_count"] == 1
+
+
+def test_public_storage_link_without_auth(app_ctx, monkeypatch):
+    client, app_main = app_ctx
+
+    class _FakeObject:
+        headers = {"Content-Type": "image/jpeg"}
+
+        def read(self):
+            return b"jpeg-bytes"
+
+    class _FakeMinio:
+        def get_object(self, bucket, object_key):
+            assert bucket == "dataset-images"
+            assert object_key.endswith(".jpg")
+            return _FakeObject()
+
+    monkeypatch.setattr(app_main, "get_minio_client", lambda: _FakeMinio())
+
+    response = client.get(
+        "/storage/v1/object/public/dataset-images/471957d4-0563-4ea7-916d-3286b7dd47f8/file.jpg"
+    )
+    assert response.status_code == 200
+    assert response.content == b"jpeg-bytes"
+    assert response.headers["content-type"].startswith("image/jpeg")
+
+
+def test_private_storage_link_requires_auth(app_ctx):
+    client, _ = app_ctx
+    response = client.get("/storage/v1/object/dataset-images/some/path.jpg")
+    assert response.status_code == 401
