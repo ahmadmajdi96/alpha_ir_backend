@@ -104,6 +104,53 @@ def test_admins_crud(app_ctx):
     assert delete_response.status_code == 204
 
 
+def test_create_tenant_with_admin_id(app_ctx):
+    client, _ = app_ctx
+
+    admin_response = client.post(
+        "/rest/v1/admins",
+        json={
+            "email": f"admin-{uuid.uuid4()}@example.com",
+            "password": "hashed-password",
+            "full_name": "Admin Owner",
+            "is_active": True,
+        },
+        headers=_auth_headers(),
+    )
+    assert admin_response.status_code == 201
+    admin_id = admin_response.json()["id"]
+
+    tenant_response = client.post(
+        "/rest/v1/tenants",
+        json={
+            "name": f"Tenant-{uuid.uuid4()}",
+            "status": "active",
+            "is_active": True,
+            "admin_id": admin_id,
+        },
+        headers=_auth_headers(),
+    )
+    assert tenant_response.status_code == 201
+    assert tenant_response.json()["admin_id"] == admin_id
+
+
+def test_unknown_field_returns_400_not_500(app_ctx):
+    client, _ = app_ctx
+
+    response = client.post(
+        "/rest/v1/tenants",
+        json={
+            "name": f"Tenant-{uuid.uuid4()}",
+            "status": "active",
+            "is_active": True,
+            "not_a_real_field": "value",
+        },
+        headers=_auth_headers(),
+    )
+    assert response.status_code == 400
+    assert "Unknown fields" in response.json()["detail"]
+
+
 def test_detect_skus_starts_processing_job_and_returns_status(app_ctx, monkeypatch):
     client, app_main = app_ctx
     tenant = _create_tenant(client)

@@ -18,7 +18,7 @@ from minio.error import S3Error
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 
@@ -90,6 +90,7 @@ class Tenant(Base, TimestampMixin):
     logo_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    admin_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("admins.id"), nullable=True, index=True)
     max_skus: Mapped[int] = mapped_column(Integer, default=50)
     max_images_per_month: Mapped[int] = mapped_column(Integer, default=1000)
     max_images_per_week: Mapped[int] = mapped_column(Integer, default=300)
@@ -240,6 +241,7 @@ class Profile(Base, TimestampMixin):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), unique=True, index=True)
     tenant_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("tenants.id"), nullable=True)
+    admin_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("admins.id"), nullable=True, index=True)
     full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -578,6 +580,30 @@ def _start_external_job(service_url: str, payload: dict[str, Any]) -> dict[str, 
         raise HTTPException(status_code=502, detail="External service returned invalid JSON") from exc
 
 
+def _normalize_model_payload(model: Any, payload: dict[str, Any]) -> dict[str, Any]:
+    # Accept SQLAlchemy attribute keys and DB column names (e.g. metadata -> metadata_).
+    key_map: dict[str, str] = {}
+    for attr in model.__mapper__.column_attrs:
+        attr_key = attr.key
+        col_name = attr.columns[0].name
+        key_map[attr_key] = attr_key
+        key_map[col_name] = attr_key
+
+    normalized: dict[str, Any] = {}
+    unknown: list[str] = []
+    for key, value in payload.items():
+        mapped_key = key_map.get(key)
+        if mapped_key is None:
+            unknown.append(key)
+            continue
+        normalized[mapped_key] = value
+
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"Unknown fields: {', '.join(sorted(unknown))}")
+
+    return normalized
+
+
 def require_security(
     authorization: Optional[str] = Header(default=None),
     apikey: Optional[str] = Header(default=None),
@@ -655,6 +681,20 @@ class ExportDatasetRequest(BaseModel):
     format: str = "yolov8"
 
 
+def _apply_runtime_schema_updates() -> None:
+    inspector = inspect(engine)
+    table_names = set(inspector.get_table_names())
+    with engine.begin() as connection:
+        if "tenants" in table_names:
+            tenant_cols = {col["name"] for col in inspector.get_columns("tenants")}
+            if "admin_id" not in tenant_cols:
+                connection.execute(text("ALTER TABLE tenants ADD COLUMN admin_id VARCHAR(36)"))
+        if "profiles" in table_names:
+            profile_cols = {col["name"] for col in inspector.get_columns("profiles")}
+            if "admin_id" not in profile_cols:
+                connection.execute(text("ALTER TABLE profiles ADD COLUMN admin_id VARCHAR(36)"))
+
+
 app = FastAPI(title="ShelfVision API", version="2.0.0")
 
 cors_origins_raw = CORS_ALLOW_ORIGINS.strip()
@@ -681,6 +721,7 @@ def startup() -> None:
     (UPLOAD_DIR / "sku-training-images").mkdir(parents=True, exist_ok=True)
     (UPLOAD_DIR / "dataset-images").mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
+    _apply_runtime_schema_updates()
     try:
         client = get_minio_client()
         for bucket in [b.strip() for b in MINIO_DEFAULT_BUCKETS.split(",") if b.strip()]:
@@ -849,7 +890,8 @@ def create_resource(
     if resource in READ_ONLY:
         raise HTTPException(status_code=405, detail="Read-only resource")
 
-    row = model(**payload)
+    normalized_payload = _normalize_model_payload(model, payload)
+    row = model(**normalized_payload)
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -881,9 +923,9 @@ def update_resource(
     if not row:
         raise HTTPException(status_code=404, detail="Not found")
 
-    for k, v in payload.items():
-        if hasattr(row, k):
-            setattr(row, k, v)
+    normalized_payload = _normalize_model_payload(model, payload)
+    for k, v in normalized_payload.items():
+        setattr(row, k, v)
 
     db.commit()
     db.refresh(row)
