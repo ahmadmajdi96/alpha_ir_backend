@@ -295,3 +295,61 @@ def test_private_storage_link_requires_auth(app_ctx):
     client, _ = app_ctx
     response = client.get("/storage/v1/object/dataset-images/some/path.jpg")
     assert response.status_code == 401
+
+
+def test_model_trainings_crud(app_ctx):
+    client, _ = app_ctx
+
+    tenant_response = client.post(
+        "/rest/v1/tenants",
+        json={"name": f"Tenant-{uuid.uuid4()}", "status": "active", "is_active": True},
+        headers=_auth_headers(),
+    )
+    assert tenant_response.status_code == 201
+    tenant_id = tenant_response.json()["id"]
+
+    dataset_response = client.post(
+        "/rest/v1/datasets",
+        json={"name": "Training Dataset", "status": "draft", "tenant_id": tenant_id},
+        headers=_auth_headers(),
+    )
+    assert dataset_response.status_code == 201
+    dataset_id = dataset_response.json()["id"]
+
+    create_response = client.post(
+        "/rest/v1/model_trainings",
+        json={
+            "model_name": "yolov8-retail",
+            "model_location": "https://models.example.com/yolov8-retail/v1.pt",
+            "tenant_id": tenant_id,
+            "dataset_id": dataset_id,
+            "status": "training",
+        },
+        headers=_auth_headers(),
+    )
+    assert create_response.status_code == 201
+    model_training_id = create_response.json()["id"]
+    assert create_response.json()["model_name"] == "yolov8-retail"
+    assert create_response.json()["model_location"] == "https://models.example.com/yolov8-retail/v1.pt"
+    assert create_response.json()["tenant_id"] == tenant_id
+    assert create_response.json()["dataset_id"] == dataset_id
+    assert create_response.json()["status"] == "training"
+    assert create_response.json()["created_at"]
+
+    list_response = client.get("/rest/v1/model_trainings?order=created_at.desc", headers=_auth_headers())
+    assert list_response.status_code == 200
+    assert len(list_response.json()) >= 1
+
+    patch_response = client.patch(
+        f"/rest/v1/model_trainings?id=eq.{model_training_id}",
+        json={"status": "completed"},
+        headers=_auth_headers(),
+    )
+    assert patch_response.status_code == 200
+    assert patch_response.json()["status"] == "completed"
+
+    delete_response = client.delete(
+        f"/rest/v1/model_trainings?id=eq.{model_training_id}",
+        headers=_auth_headers(),
+    )
+    assert delete_response.status_code == 204

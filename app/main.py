@@ -419,6 +419,18 @@ class TrainingJob(Base, TimestampMixin):
     created_by: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
 
 
+class ModelTraining(Base):
+    __tablename__ = "model_trainings"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    model_name: Mapped[str] = mapped_column(String(255), index=True)
+    model_location: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    tenant_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("tenants.id"), nullable=True, index=True)
+    dataset_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("datasets.id"), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(32), default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 engine_kwargs: dict[str, Any] = {"pool_pre_ping": True}
 if DATABASE_URL.startswith("sqlite"):
     engine_kwargs["connect_args"] = {"check_same_thread": False}
@@ -701,6 +713,14 @@ def _apply_runtime_schema_updates() -> None:
             profile_cols = {col["name"] for col in inspector.get_columns("profiles")}
             if "admin_id" not in profile_cols:
                 connection.execute(text("ALTER TABLE profiles ADD COLUMN admin_id VARCHAR(36)"))
+        if "model_trainings" in table_names:
+            model_training_cols = {col["name"] for col in inspector.get_columns("model_trainings")}
+            if "model_location" not in model_training_cols:
+                connection.execute(text("ALTER TABLE model_trainings ADD COLUMN model_location TEXT"))
+            if "tenant_id" not in model_training_cols:
+                connection.execute(text("ALTER TABLE model_trainings ADD COLUMN tenant_id VARCHAR(36)"))
+            if "dataset_id" not in model_training_cols:
+                connection.execute(text("ALTER TABLE model_trainings ADD COLUMN dataset_id VARCHAR(36)"))
 
 
 app = FastAPI(title="ShelfVision API", version="2.0.0")
@@ -771,6 +791,7 @@ CRUD_RESOURCES: dict[str, Any] = {
     "dataset_images": DatasetImage,
     "dataset_classes": DatasetClass,
     "training_jobs": TrainingJob,
+    "model_trainings": ModelTraining,
 }
 
 READ_ONLY = {"detections", "usage_metrics", "models", "processing_jobs", "detection_results", "training_jobs"}
